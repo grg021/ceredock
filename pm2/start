@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ -z "$APP" ]; then
+    // Important!!! Replace socket.js with your entry point
+    export APP=socket.js
+fi
+
+cd /app
+pm2 start -x $APP --no-daemon

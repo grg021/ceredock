@@ -190,6 +190,20 @@ RUN if [ ${INSTALL_AEROSPIKE_EXTENSION} = false ]; then \
     rm /etc/php/7.0/cli/conf.d/aerospike.ini \
 ;fi
 
+#####################################
+# PHP Imagick:
+#####################################
+USER root
+ARG INSTALL_IMAGICK=true
+ENV INSTALL_IMAGICK ${INSTALL_IMAGICK}
+RUN if [ ${INSTALL_IMAGICK} = true ]; then \
+    # Install Imagick
+    apt-get update && \
+    apt-get install libmagickwand-dev -y && \
+    printf "\n" | pecl install imagick && \
+    echo "extension=imagick.so" >> /etc/php/7.0/cli/php.ini \
+;fi
+
 #
 #--------------------------------------------------------------------------
 # Final Touch

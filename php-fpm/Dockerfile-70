@@ -128,6 +128,21 @@ RUN if [ ${INSTALL_OPCACHE} = true ]; then \
 # Copy opcache configration
 COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
+#####################################
+# PHP Imagick:
+#####################################
+USER root
+ARG INSTALL_IMAGICK=true
+ENV INSTALL_IMAGICK ${INSTALL_IMAGICK}
+RUN if [ ${INSTALL_IMAGICK} = true ]; then \
+    # Install Imagick
+    apt-get update && \
+    apt-get install libmagickwand-dev -y && \
+    printf "\n" | pecl install imagick \
+;fi
+
+# Copy imagick configuration
+COPY ./imagick.ini /usr/local/etc/php/conf.d/imagick.ini
 
 #
 #--------------------------------------------------------------------------
