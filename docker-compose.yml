@@ -14,6 +14,7 @@ services:
                 - INSTALL_DRUSH=false
                 - INSTALL_AEROSPIKE_EXTENSION=false
                 - INSTALL_IMAGICK=true
+                - INSTALL_SUPERVISOR=true
                 - COMPOSER_GLOBAL_INSTALL=false
                 - INSTALL_WORKSPACE_SSH=false
                 - PUID=1000
@@ -331,12 +332,5 @@ services:
                     - volumes_source
         ports:
             - "3000:3000"
-
-### supervisor Container ##################################
-
-    supervisor:
-        build: ./supervisor
-        volumes_from:
-                    - volumes_source
 
 ### Add more Containers below ###############################

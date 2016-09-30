@@ -204,6 +204,25 @@ RUN if [ ${INSTALL_IMAGICK} = true ]; then \
     echo "extension=imagick.so" >> /etc/php/7.0/cli/php.ini \
 ;fi
 
+#####################################
+# PHP Supervisor:
+#####################################
+USER root
+ARG INSTALL_SUPERVISOR=true
+ENV INSTALL_SUPERVISOR ${INSTALL_SUPERVISOR}
+RUN if [ ${INSTALL_SUPERVISOR} = true ]; then \
+    apt-get update && \
+    apt-get install -y supervisor \
+;fi
+
+COPY ./supervisor/imageprocessingqueue.conf /etc/supervisor/conf.d/imageprocessingqueue.conf
+COPY ./supervisor/broadcastqueue.conf /etc/supervisor/conf.d/broadcastqueue.conf
+COPY ./supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+RUN mkdir -p /var/log/supervisor
+
+CMD ["/usr/bin/supervisord"]
+
 #
 #--------------------------------------------------------------------------
 # Final Touch
