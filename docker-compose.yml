@@ -15,6 +15,7 @@ services:
                 - INSTALL_AEROSPIKE_EXTENSION=false
                 - INSTALL_IMAGICK=true
                 - INSTALL_SUPERVISOR=true
+                - INSTALL_JDK8=true
                 - COMPOSER_GLOBAL_INSTALL=false
                 - INSTALL_WORKSPACE_SSH=false
                 - PUID=1000

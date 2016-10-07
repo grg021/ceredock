@@ -223,6 +223,16 @@ RUN mkdir -p /var/log/supervisor
 
 CMD ["/usr/bin/supervisord"]
 
+#####################################
+# JDK8:
+#####################################
+USER root
+ARG INSTALL_JDK8=true
+ENV INSTALL_JDK8 ${INSTALL_JDK8}
+RUN if [ ${INSTALL_JDK8} = true ]; then \
+    apt-get update && \
+    apt-get install -y openjdk-8-jdk \
+;fi
 #
 #--------------------------------------------------------------------------
 # Final Touch
