@@ -58,8 +58,11 @@ It's like Laravel Homestead but for Docker instead of Vagrant.
 		- [Install xDebug](#Install-xDebug)
 		    - [Start/Stop xDebug](#Controll-xDebug)
 	- [Production](#Production)
+		- [Prepare LaraDock for Production](#LaraDock-for-Production)
 		- [Setup Laravel and Docker on Digital Ocean](#Digital-Ocean)
 	- [Misc](#Misc)
+		- [Cron jobs](#CronJobs)
+		- [MySQL access from host](#MySQL-access-from-host)
 		- [Use custom Domain](#Use-custom-Domain)
 		- [Enable Global Composer Build Install](#Enable-Global-Composer-Build-Install)
 		- [Install Prestissimo](#Install-Prestissimo)
@@ -208,7 +211,7 @@ What's better than a **Demo Video**:
 ## Installation
 
 
-1 - Clone the `LaraDock` repository:
+Clone the `LaraDock` repository:
 
 **A)** If you already have a Laravel project, clone this repository on your `Laravel` root directory:
 
@@ -253,12 +256,13 @@ If you are using **Docker Native** (For Mac/Windows) or even for Linux, continue
 docker-compose up -d  nginx mysql
 ```
 
+**Note**: The `workspace` and `php-fpm` will run automatically in most of the cases, so no need to specify them in the `up` command. If you couldn't find them running then you need specify them as follow: `docker-compose up -d nginx php-fpm mysql workspace`.
+
+
 You can select your own combination of Containers form the list below:
 
 `nginx`, `hhvm`, `php-fpm`, `mysql`, `redis`, `postgres`, `mariadb`, `neo4j`, `mongo`, `apache2`, `caddy`, `memcached`, `beanstalkd`, `beanstalkd-console`, `rabbitmq`, `workspace`, `phpmyadmin`, `aerospike`, `pgadmin`, `elasticsearch`.
 
-
-**Note**: `workspace` and `php-fpm` will run automatically in most of the cases, so no need to specify them in the `up` command.
 
 
 
@@ -268,14 +272,13 @@ You can select your own combination of Containers form the list below:
 ```bash
 docker-compose exec workspace bash
 ```
-<br />
-<br>
-2a - Alternatively, Windows Powershell users can execute the following command to enter a running container.
+Alternatively, for Windows Powershell users: execute the following command to enter any running container:
+
 ```bash
-docker exec -it {container-id} bash
+docker exec -it {workspace-container-id} bash
 ```
-<br />
-Add `--user=laradock` (example `docker-compose exec --user=laradock workspace bash`) to have files created as your host's user. (you can change the PUID (User id) and PGID (group id) variables from the `docker-compose.yml`).
+
+**Note:** You can add `--user=laradock` (example `docker-compose exec --user=laradock workspace bash`) to have files created as your host's user. (you can change the PUID (User id) and PGID (group id) variables from the `docker-compose.yml`).
 
 
 
@@ -894,6 +897,13 @@ It should be like this:
 
 2 - Re-build the containers `docker-compose build workspace php-fpm`
 
+3 - Open `laradock/workspace/xdebug.ini` and/or `laradock/php-fpm/xdebug.ini` and enable at least the following configs:
+
+```
+xdebug.remote_autostart=1
+xdebug.remote_enable=1
+xdebug.remote_connect_back=1
+```
 
 For information on how to configure xDebug with your IDE and work it out, check this [Repository](https://github.com/LarryEitel/laravel-laradock-phpstorm).
 
@@ -921,10 +931,30 @@ To controll the behavior of xDebug (in the `php-fpm` Container), you can run the
 
 
 <br>
+<a name="LaraDock-for-Production"></a>
+### Prepare LaraDock for Production
+
+It's recommended for production to create a custom `docker-compose.yml` file. For that reason LaraDock is shipped with `production-docker-compose.yml` which should contain only the containers you are planning to run on production (usage exampe: `docker-compose -f production-docker-compose.yml up -d nginx mysql redis ...`). 
+
+Note: The Database (MySQL/MariaDB/...) ports should not be forwarded on production, because Docker will automatically publish the port on the host, which is quite insecure, unless specifically told not to. So make sure to remove these lines:
+
+```
+ports:
+    - "3306:3306"
+```
+
+To learn more about how Docker publishes ports, please read [this excellent post on the subject](https://fralef.me/docker-and-iptables.html).
+
+
+
+
+
+
+<br>
 <a name="Digital-Ocean"></a>
 ### Setup Laravel and Docker on Digital Ocean
 
-####[Full Giude Here](https://github.com/LaraDock/laradock/blob/master/_guides/digital_ocean.md)
+####[Full Guide Here](https://github.com/LaraDock/laradock/blob/master/_guides/digital_ocean.md)
 
 
 
@@ -936,6 +966,29 @@ To controll the behavior of xDebug (in the `php-fpm` Container), you can run the
 
 
 <br>
+
+<a name="CronJobs"></a>
+### Adding cron jobs
+
+You can add your cron jobs to `workspace/crontab/root` after the `php artisan` line.
+
+```
+* * * * * php /var/www/laravel/artisan schedule:run >> /dev/null 2>&1
+
+# Custom cron
+* * * * * root echo "Every Minute" > /var/log/cron.log 2>&1
+```
+
+<a name="MySQL-access-from-host"></a>
+### MySQL access from host
+
+You can forward the MySQL/MariaDB port to your host by making sure these lines are added to the `mysql` or `mariadb` section of the `docker-compose.yml` or in your [environment specific Compose](https://docs.docker.com/compose/extends/) file.
+
+```
+ports:
+    - "3306:3306"
+```
+
 <a name="Use-custom-Domain"></a>
 ### Use custom Domain (instead of the Docker IP)
 
@@ -1133,6 +1186,9 @@ This little project was built by one man who has a full time job and many respon
 
 #### Read the [Contribution Guidelines](https://github.com/LaraDock/laradock/blob/master/CONTRIBUTING.md).
 
+
+
+
 <a name="Help"></a>
 ## Help & Questions
 
@@ -1142,33 +1198,40 @@ You can as well can open an [issue](https://github.com/laradock/laradock/issues)
 
 For special help with Docker and/or Laravel, you can schedule a live call with the creator of this project at [Codementor.io](https://www.codementor.io/mahmoudz).
 
+
+
+
 ## Credits
+
+**Creator:**
+
+- [Mahmoud Zalt](https://github.com/Mahmoudz)  [ [Twitter](https://twitter.com/Mahmoud_Zalt) | [Personal Site](http://zalt.me) | [Linkedin](https://www.linkedin.com/in/mahmoudzalt) ]
 
 **Admins:**
 
-- [Mahmoud Zalt](https://github.com/Mahmoudz) **Creator** (Twitter [@Mahmoud_Zalt](https://twitter.com/Mahmoud_Zalt))
-- [Bo-Yi Wu (appleboy)](https://github.com/appleboy)
+- [Bo-Yi Wu](https://github.com/appleboy) (appleboy)
+- [Philippe Trépanier](https://github.com/philtrep) (philtrep)
 
 **Main Contributors:**
 
-- [Francis Lavoie (francislavoie)](https://github.com/francislavoie)
+- [Francis Lavoie](https://github.com/francislavoie) (francislavoie)
 - [luciano-jr](https://github.com/luciano-jr)
 - [Zhqagp](https://github.com/zhqagp)
-- [Tim B (tjb328)](https://github.com/tjb328)
+- [Tim B.](https://github.com/tjb328) (tjb328)
 - [MidasCodeBreaker](https://github.com/midascodebreaker)
-- [Larry Eitel (LarryEitel)](https://github.com/LarryEitel)
-- [Suteepat (tianissimo)](https://github.com/tianissimo)
-- [David (davidavz)](https://github.com/davidavz)
+- [Larry Eitel](https://github.com/LarryEitel)
+- [Suteepat](https://github.com/tianissimo) (tianissimo)
+- [David](https://github.com/davidavz) (davidavz)
 - [Lialosiu](https://github.com/lialosiu)
-- [Eric Pfeiffer (computerfr33k)](https://github.com/computerfr33k)
+- [Eric Pfeiffer](https://github.com/computerfr33k) (computerfr33k)
 - [Orette](https://github.com/orette)
-- [Jack Fletcher (Kauhat)](https://github.com/Kauhat)
-- [Amin Mkh (AminMkh)](https://github.com/AminMkh)
-- [Matthew Tonkin Dunn (mattythebatty)](https://github.com/mattythebatty)
-- [Zhivitsa Kirill (zhikiri)](https://github.com/zhikiri)
+- [Jack Fletcher](https://github.com/Kauhat) (Kauhat)
+- [Amin Mkh](https://github.com/AminMkh)
+- [Matthew Tonkin Dunn](https://github.com/mattythebatty) (mattythebatty)
+- [Zhivitsa Kirill](https://github.com/zhikiri) (zhikiri)
 - [Benmag](https://github.com/benmag)
 
-**Awesome People:**
+**Other Contributors & Supporters:**
 
 - [Contributors](https://github.com/LaraDock/laradock/graphs/contributors)
 - [Supporters](https://github.com/LaraDock/laradock/issues?utf8=%E2%9C%93&q=)
