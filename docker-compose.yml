@@ -16,6 +16,7 @@ services:
                 - INSTALL_IMAGICK=true
                 - INSTALL_SUPERVISOR=true
                 - INSTALL_JDK8=true
+                - INSTALL_TF=true
                 - COMPOSER_GLOBAL_INSTALL=false
                 - INSTALL_WORKSPACE_SSH=false
                 - PUID=1000
@@ -332,6 +333,6 @@ services:
         volumes_from:
                     - volumes_source
         ports:
-            - "3000:3000"
+            - "8880:3000"
 
 ### Add more Containers below ###############################

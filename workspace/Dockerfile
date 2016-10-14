@@ -178,7 +178,7 @@ RUN if [ ${INSTALL_NODE} = true ]; then \
 #####################################
 USER root
 
-ARG INSTALL_AEROSPIKE_EXTENSION=true
+ARG INSTALL_AEROSPIKE_EXTENSION=false
 ENV INSTALL_AEROSPIKE_EXTENSION ${INSTALL_AEROSPIKE_EXTENSION}
 
 # Copy aerospike configration for remote debugging
@@ -206,7 +206,7 @@ RUN if [ ${INSTALL_AEROSPIKE_EXTENSION} = false ]; then \
 # PHP Imagick:
 #####################################
 USER root
-ARG INSTALL_IMAGICK=true
+ARG INSTALL_IMAGICK=false
 ENV INSTALL_IMAGICK ${INSTALL_IMAGICK}
 RUN if [ ${INSTALL_IMAGICK} = true ]; then \
     # Install Imagick
@@ -220,7 +220,7 @@ RUN if [ ${INSTALL_IMAGICK} = true ]; then \
 # PHP Supervisor:
 #####################################
 USER root
-ARG INSTALL_SUPERVISOR=true
+ARG INSTALL_SUPERVISOR=false
 ENV INSTALL_SUPERVISOR ${INSTALL_SUPERVISOR}
 RUN if [ ${INSTALL_SUPERVISOR} = true ]; then \
     apt-get update && \
@@ -239,12 +239,26 @@ CMD ["/usr/bin/supervisord"]
 # JDK8:
 #####################################
 USER root
-ARG INSTALL_JDK8=true
+ARG INSTALL_JDK8=false
 ENV INSTALL_JDK8 ${INSTALL_JDK8}
 RUN if [ ${INSTALL_JDK8} = true ]; then \
     apt-get update && \
     apt-get install -y openjdk-8-jdk \
 ;fi
+
+#####################################
+# PIP Python and Tensorflow:
+#####################################
+USER root
+ARG INSTALL_TF=false
+ENV INSTALL_TF ${INSTALL_TF}
+RUN if [ ${INSTALL_TF} = true ]; then \
+    apt-get update && \
+    apt-get install -y python-pip python-dev && \
+    export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.11.0rc0-cp27-none-linux_x86_64.whl && \
+    pip install --upgrade $TF_BINARY_URL \
+;fi
+
 #
 #--------------------------------------------------------------------------
 # Final Touch

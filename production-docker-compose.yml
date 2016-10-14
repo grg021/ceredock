@@ -12,6 +12,10 @@ services:
                 - INSTALL_MONGO=false
                 - INSTALL_NODE=false
                 - INSTALL_DRUSH=false
+                - INSTALL_IMAGICK=true
+                - INSTALL_SUPERVISOR=true
+                - INSTALL_JDK8=true
+                - INSTALL_TF=true
                 - INSTALL_AEROSPIKE_EXTENSION=false
                 - COMPOSER_GLOBAL_INSTALL=false
                 - INSTALL_WORKSPACE_SSH=false
@@ -59,3 +63,12 @@ services:
 #            - ./data/mysql:/var/lib/mysql
 
 ### Add All your Software Containers below ###############################
+
+### Redis Container #########################################
+
+    redis:
+        build: ./redis
+        volumes_from:
+            - volumes_data
+        ports:
+            - "6379:6379"
