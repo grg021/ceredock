@@ -1,1 +1,2 @@
-docker-compose up -d nginx mysql mailhog pm2 redis
+#!/usr/bin/env bash
+docker-compose up -d caddy mysql mailhog pm2 redis

@@ -12,6 +12,10 @@ services:
                 - INSTALL_MONGO=false
                 - INSTALL_NODE=false
                 - INSTALL_DRUSH=false
+                - INSTALL_IMAGICK=true
+                - INSTALL_SUPERVISOR=true
+                - INSTALL_JDK8=true
+                - INSTALL_TF=true
                 - INSTALL_AEROSPIKE_EXTENSION=false
                 - COMPOSER_GLOBAL_INSTALL=false
                 - INSTALL_WORKSPACE_SSH=false
@@ -20,8 +24,6 @@ services:
                 - NODE_VERSION=stable
         volumes_from:
             - volumes_source
-        ports:
-           - "22:22"
         tty: true
 
 ### PHP-FPM Container #######################################
@@ -36,6 +38,7 @@ services:
                 - INSTALL_MEMCACHED=false
                 - INSTALL_OPCACHE=false
                 - INSTALL_AEROSPIKE_EXTENSION=false
+                - INSTALL_IMAGICK=true
             dockerfile: Dockerfile-70
         volumes_from:
             - volumes_source
@@ -56,6 +59,66 @@ services:
     volumes_data:
         image: tianon/true
         volumes:
-#            - ./data/mysql:/var/lib/mysql
+            - ./data/mysql:/var/lib/mysql
+            - ./data/redis:/data
+            - ./data/caddy:/root/.caddy
 
-### Add All your Software Containers below ###############################
+
+### Redis Container #########################################
+
+    redis:
+        build: ./redis
+        volumes_from:
+            - volumes_data
+        ports:
+            - "6379:6379"
+
+### Caddy Server Container ##################################
+
+    caddy:
+        build: ./caddy
+        volumes_from:
+            - volumes_source
+            - volumes_data
+        ports:
+            - "80:80"
+            - "443:443"
+            - "2015:2015"
+        volumes:
+            - ./caddy/Caddyfile:/etc/Caddyfile
+            - ./logs/caddy:/var/log/caddy
+        links:
+            - php-fpm
+
+### mailhog Container ##################################
+
+    mailhog:
+        build: ./mailhog
+        ports:
+            - "8025:8025"
+            - "1025:1025"
+
+### pm2 Container ##################################
+
+    pm2:
+        build: ./pm2
+        environment:
+                    APP: socket.js
+        volumes_from:
+                    - volumes_source
+        ports:
+            - "8880:3000"
+
+### MySQL Container #########################################
+
+    mysql:
+        build: ./mysql
+        volumes_from:
+            - volumes_data
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: homestead
+            MYSQL_USER: homestead
+            MYSQL_PASSWORD: secret
+            MYSQL_ROOT_PASSWORD: root
