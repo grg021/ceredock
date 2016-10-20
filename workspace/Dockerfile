@@ -46,6 +46,14 @@ ARG PUID=1000
 ARG PGID=1000
 RUN groupadd -g $PGID laradock && \
     useradd -u $PUID -g laradock -m laradock
+    
+#####################################
+# Set Timezone
+#####################################
+
+ARG TZ=UTC
+ENV TZ ${TZ}
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 #####################################
 # Composer:
@@ -171,6 +179,30 @@ RUN if [ ${INSTALL_NODE} = true ]; then \
     echo "" >> ~/.bashrc && \
     echo 'export NVM_DIR="/home/laradock/.nvm"' >> ~/.bashrc && \
     echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> ~/.bashrc \
+;fi
+
+#####################################
+# YARN:
+#####################################
+
+USER laradock
+
+ARG INSTALL_YARN=false
+ENV INSTALL_YARN ${INSTALL_YARN}
+
+RUN if [ ${INSTALL_YARN} = true ]; then \
+    curl -o- -L https://yarnpkg.com/install.sh | bash && \
+        echo "" >> ~/.bashrc && \
+        echo 'export PATH="$HOME/.yarn/bin:$PATH"' >> ~/.bashrc \
+;fi
+
+# Add YARN binaries to root's .bashrc
+USER root
+
+RUN if [ ${INSTALL_YARN} = true ]; then \
+    echo "" >> ~/.bashrc && \
+    echo 'export YARN_DIR="/home/laradock/.yarn"' >> ~/.bashrc && \
+    echo 'export PATH="$YARN_DIR/bin:$PATH"' >> ~/.bashrc \
 ;fi
 
 #####################################

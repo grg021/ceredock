@@ -61,12 +61,14 @@ It's like Laravel Homestead but for Docker instead of Vagrant.
 		- [Prepare LaraDock for Production](#LaraDock-for-Production)
 		- [Setup Laravel and Docker on Digital Ocean](#Digital-Ocean)
 	- [Misc](#Misc)
+		- [Change the timezone](#Change-the-timezone)
 		- [Cron jobs](#CronJobs)
 		- [MySQL access from host](#MySQL-access-from-host)
 		- [Use custom Domain](#Use-custom-Domain)
 		- [Enable Global Composer Build Install](#Enable-Global-Composer-Build-Install)
 		- [Install Prestissimo](#Install-Prestissimo)
 		- [Install Node + NVM](#Install-Node)
+		- [Install Node + YARN](#Install-Yarn)
 		- [Debugging](#debugging)
 		- [Upgrading LaraDock](#upgrading-laradock)
 - [Help & Questions](#Help)
@@ -192,8 +194,8 @@ Running a virtual Container is much faster than running a full virtual Machine. 
 
 What's better than a **Demo Video**:
 
-- LaraDock v4.* (Coming soon..)
-- LaraDock [v2.2](https://www.youtube.com/watch?v=-DamFMczwDA)
+- LaraDock [v4.*](https://www.youtube.com/watch?v=TQii1jDa96Y)
+- LaraDock [v2.*](https://www.youtube.com/watch?v=-DamFMczwDA)
 - LaraDock [v0.3](https://www.youtube.com/watch?v=jGkyO6Is_aI)
 - LaraDock [v0.1](https://www.youtube.com/watch?v=3YQsHe6oF80)
 
@@ -220,13 +222,32 @@ git submodule add https://github.com/LaraDock/laradock.git
 ```
 >If you are not already using Git for your Laravel project, you can use `git clone` instead of `git submodule`.
 
+Note: In this case the folder structure will be like this (recommended):
+
+```
+- project1
+	- laradock
+- project2
+	- laradock
+```
+
+<br>
+
 **B)** If you don't have a Laravel project, and you want to install Laravel from Docker, clone this repo anywhere on your machine:
 
 ```bash
 git clone https://github.com/LaraDock/laradock.git
 ```
+Note: In this case the folder structure will be like this:
 
+```
+- projects
+	- laradock
+	- project1
+	- project2
+```
 
+**Note:** if you are using this folder structure don't forget to edit the `docker-compose.yml` file to map to your Laravel directory once you have it (example: `- ../project1/:/var/www/laravel`). "You will need to stop and re-run your docker-compose command for the changes to take place".
 
 <a name="Usage"></a>
 ## Usage
@@ -239,13 +260,12 @@ If you are using **Docker Toolbox** (VM), do one of the following:
 - Upgrade to Docker [Native](https://www.docker.com/products/docker) for Mac/Windows (Recommended). Check out [Upgrading Laradock](#upgrading-laradock)
 - Use LaraDock v3.* (Visit the `LaraDock-ToolBox` [Branch](https://github.com/LaraDock/laradock/tree/LaraDock-ToolBox)).
 
+<br>
 
-If you are using **Docker Native** (For Mac/Windows) or even for Linux, continue this documentation normally since LaraDock v4 and above is just for that.
-
-
+>**Warning:** If you used an older version of LaraDock it's highly recommended to rebuild the containers you need to use [see how you rebuild a container](#Build-Re-build-Containers) in order to prevent errors as much as possible.
 
 <br>
-<br>
+
 1 - Run Containers: *(Make sure you are in the `laradock` folder before running the `docker-compose` commands).*
 
 
@@ -402,15 +422,17 @@ Examples:
 Change MySQL Database Name:
 
 ```yml
-  environment:
-    MYSQL_DATABASE: laradock
+    environment:
+        MYSQL_DATABASE: laradock
+    ...
 ```
 
 Change Redis defaut port to 1111:
 
 ```yml
-  ports:
-    - "1111:6379"
+    ports:
+        - "1111:6379"
+    ...
 ```
 
 
@@ -529,6 +551,7 @@ Since the new Laravel application is in the `my-cool-app` folder, we need to rep
         build: ./application
         volumes:
             - ../my-cool-app/:/var/www/laravel
+    ...
 ```
 4 - Go to that folder and start working..
 
@@ -805,11 +828,12 @@ By default **PHP-FPM 7.0** is running.
 
 3 - Change the version number, by replacing `Dockerfile-70` with `Dockerfile-56`, like this:
 
-```txt
-php-fpm:
-    build:
-        context: ./php-fpm
-        dockerfile: Dockerfile-70
+```yml
+    php-fpm:
+        build:
+            context: ./php-fpm
+            dockerfile: Dockerfile-70
+    ...
 ```
 
 4 - Finally rebuild the container
@@ -967,6 +991,24 @@ To learn more about how Docker publishes ports, please read [this excellent post
 
 <br>
 
+<a name="Change-the-timezone"></a>
+### Change the timezone
+
+To change the timezone for the `workspace` container, modify the `TZ` build argument in the Docker Compose file to one in the [TZ database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+
+For example, if I want the timezone to be `New York`:
+
+```yml
+    workspace:
+        build:
+            context: ./workspace
+            args:
+                - TZ=America/New_York
+    ...
+```
+
+We also recommend [setting the timezone in Laravel](http://www.camroncade.com/managing-timezones-with-laravel/).
+
 <a name="CronJobs"></a>
 ### Adding cron jobs
 
@@ -978,6 +1020,8 @@ You can add your cron jobs to `workspace/crontab/root` after the `php artisan` l
 # Custom cron
 * * * * * root echo "Every Minute" > /var/log/cron.log 2>&1
 ```
+
+Make sure you [change the timezone](#Change-the-timezone) if you don't want to use the default (UTC).
 
 <a name="MySQL-access-from-host"></a>
 ### MySQL access from host
@@ -1077,6 +1121,30 @@ It should be like this:
             context: ./workspace
             args:
                 - INSTALL_NODE=true
+    ...
+```
+
+3 - Re-build the container `docker-compose build workspace`
+
+<br>
+<a name="Install-Yarn"></a>
+### Install Node + YARN
+
+Yarn is a new package manager for JavaScript. It is so faster than npm, which you can find [here](http://yarnpkg.com/en/compare).To install NodeJS and [Yarn](https://yarnpkg.com/) in the Workspace container:
+
+1 - Open the `docker-compose.yml` file
+
+2 - Search for the `INSTALL_NODE` and `INSTALL_YARN` argument under the Workspace Container and set it to `true`
+
+It should be like this:
+
+```yml
+    workspace:
+        build:
+            context: ./workspace
+            args:
+                - INSTALL_NODE=true
+                - INSTALL_YARN=true
     ...
 ```
 
